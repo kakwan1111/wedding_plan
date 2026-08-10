@@ -3,1111 +3,661 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>夢幻婚禮籌備與隨手記 Checklist</title>
+    <title>我們的備婚倒數 Check List (雙人同步版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        rose: {
-                            50: '#fff1f2',
-                            100: '#ffe4e6',
-                            200: '#fecdd3',
-                            300: '#fda4af',
-                            400: '#fb7185',
-                            500: '#f43f5e',
-                            600: '#e11d48',
-                        },
-                        blush: '#FFF5F5',
-                        champagne: '#FDFBF7',
-                        gold: '#D4AF37'
-                    },
-                    fontFamily: {
-                        sans: ['Noto Sans TC', 'sans-serif'],
-                    }
-                }
-            }
-        }
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Firebase SDK (v11.6.1) -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        window.FirebaseModule = {
+            initializeApp,
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged,
+            getFirestore,
+            doc,
+            setDoc,
+            getDoc,
+            onSnapshot,
+            collection
+        };
     </script>
+
     <style>
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #FAF7F5;
-        }
+        [v-cloak] { display: none; }
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #fda4af;
-            border-radius: 10px;
-        }
-        .checkbox-custom:checked + div {
-            text-decoration: line-through;
-            color: #9ca3af;
-        }
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            .print-only {
-                display: block !important;
-            }
-            body {
-                background: white;
-            }
-            .card-print {
-                break-inside: avoid;
-                border: 1px solid #e5e7eb;
-                box-shadow: none !important;
-            }
+            background: #f472b6;
+            border-radius: 4px;
         }
     </style>
 </head>
-<body class="text-gray-800 antialiased min-h-screen flex flex-col justify-between">
-
-    <!-- Header -->
-    <header class="bg-white border-b border-rose-100 sticky top-0 z-30 shadow-sm no-print">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-3">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 shadow-inner">
-                    <i class="fa-solid fa-heart text-lg animate-pulse"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-                        備婚隨手記 <span class="text-xs bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full font-medium">Checklist</span>
-                    </h1>
-                    <p class="text-xs text-gray-500">規劃屬於你們的完美婚禮細節</p>
-                </div>
-            </div>
-
-            <!-- Header Quick Actions -->
-            <div class="flex items-center space-x-2">
-                <button onclick="toggleSyncModal()" id="syncStatusBtn" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-medium text-sm px-3 py-2 rounded-xl border border-rose-200 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-users text-rose-500"></i>
-                    <span id="syncStatusText" class="hidden sm:inline">雙人協作</span>
-                    <span id="syncDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                </button>
-
-                <button onclick="openAddTaskModal()" class="bg-rose-500 hover:bg-rose-600 text-white font-medium text-sm px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i>
-                    <span class="hidden sm:inline">隨時新增事項</span>
-                </button>
-                <button onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm p-2.5 rounded-xl transition-all" title="列印清單">
-                    <i class="fa-solid fa-print"></i>
-                </button>
-                <button onclick="toggleSettingsModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm p-2.5 rounded-xl transition-all" title="備份與設定">
-                    <i class="fa-solid fa-gear"></i>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
-
-        <!-- Countdown & Progress Hero Card -->
-        <div class="bg-gradient-to-r from-rose-500 via-rose-400 to-pink-400 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden no-print">
-            <!-- Decorative elements -->
-            <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-            <div class="absolute right-20 -top-10 w-32 h-32 bg-yellow-200/20 rounded-full blur-xl pointer-events-none"></div>
-
-            <div class="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                
-                <!-- Wedding Date Input & Countdown -->
-                <div class="md:col-span-2 space-y-3">
-                    <div class="flex flex-wrap items-center gap-3">
-                        <span class="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase">
-                            <i class="fa-regular fa-calendar-check mr-1"></i> 婚禮倒數計時
-                        </span>
-                        <div class="flex items-center gap-2 text-sm bg-black/10 px-3 py-1 rounded-full">
-                            <label for="weddingDateInput" class="text-rose-100 font-medium">婚期：</label>
-                            <input type="date" id="weddingDateInput" onchange="updateWeddingDate(this.value)" class="bg-transparent text-white font-bold cursor-pointer focus:outline-none focus:ring-0 text-sm">
-                        </div>
-                    </div>
-
-                    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight" id="countdownTitle">
-                        載入中...
-                    </h2>
-                    <p class="text-rose-100 text-sm opacity-90" id="countdownSubtitle">
-                        好好享受籌備婚禮的每一刻，記錄下專屬於你們的浪漫旅程。
-                    </p>
-                </div>
-
-                <!-- Overall Progress Gauge -->
-                <div class="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/20 flex flex-col justify-center items-center text-center">
-                    <span class="text-xs text-rose-100 font-medium mb-1">備婚總完成度</span>
-                    <div class="text-4xl font-black mb-2" id="progressPercentage">0%</div>
-                    
-                    <!-- Progress Bar -->
-                    <div class="w-full bg-black/20 rounded-full h-2.5 overflow-hidden mb-2">
-                        <div id="progressBar" class="bg-white h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                    
-                    <div class="text-xs text-rose-100 flex justify-between w-full px-1">
-                        <span>已完成 <strong id="completedCount">0</strong> 項</span>
-                        <span>剩餘 <strong id="pendingCount">0</strong> 項</span>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Filter & Search Control Bar -->
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6 no-print flex flex-col md:flex-row gap-4 items-center justify-between">
+<body class="bg-rose-50/50 text-slate-700 min-h-screen pb-12 font-sans">
+    <div id="app" v-cloak class="max-w-4xl mx-auto px-4 py-8">
+        
+        <!-- Header 頂部標題區 -->
+        <header class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100 mb-6 text-center relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-rose-100 rounded-full blur-2xl opacity-60"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-pink-100 rounded-full blur-2xl opacity-60"></div>
             
-            <!-- Category Filter Tabs -->
-            <div class="flex items-center space-x-1 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 custom-scrollbar text-sm" id="phaseFilterContainer">
-                <!-- Dynamic Phase Buttons -->
+            <h1 class="text-3xl font-extrabold text-rose-600 mb-2 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-heart text-rose-500"></i>
+                我們的結婚備忘錄
+            </h1>
+            <p class="text-slate-500 text-sm">按部就班，打造屬於你們的完美夢幻婚禮 💕</p>
+
+            <!-- 雙人協作同步狀態區塊 -->
+            <div class="mt-4 inline-flex flex-wrap items-center justify-center gap-2 bg-rose-50/80 px-4 py-2 rounded-full border border-rose-200 text-xs">
+                <span class="flex items-center gap-1.5 text-slate-600 font-medium">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span :class="isSyncing ? 'animate-ping bg-rose-400' : 'bg-emerald-400'" class="absolute inline-flex h-full w-full rounded-full opacity-75"></span>
+                        <span :class="isSyncing ? 'bg-rose-500' : 'bg-emerald-500'" class="relative inline-flex rounded-full h-2.5 w-2.5"></span>
+                    </span>
+                    房間代碼：<strong class="text-slate-800 font-bold select-all">{{ roomId }}</strong>
+                </span>
+                <button @click="copyShareLink" class="bg-white text-rose-600 hover:bg-rose-100 px-2.5 py-1 rounded-full border border-rose-200 font-semibold transition flex items-center gap-1 shadow-xs">
+                    <i class="fa-regular fa-copy"></i> 複製邀請連結給伴侶
+                </button>
+                <button @click="promptChangeRoom" class="text-slate-500 hover:text-rose-600 underline ml-1">
+                    切換/加入房間
+                </button>
             </div>
 
-            <!-- Search and Status Filter -->
-            <div class="flex items-center gap-3 w-full md:w-auto">
-                <div class="relative flex-grow md:w-64">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="搜尋備忘事項 (例如：喜餅、婚攝影...)" class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all">
+            <!-- 進度條區塊 -->
+            <div class="mt-6 max-w-xl mx-auto">
+                <div class="flex justify-between items-center text-sm font-semibold mb-1">
+                    <span class="text-slate-600">總體準備進度</span>
+                    <span class="text-rose-600 font-bold">{{ progressPercentage }}% ({{ completedCount }}/{{ totalCount }})</span>
                 </div>
+                <div class="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden p-0.5 border border-rose-100">
+                    <div class="bg-gradient-to-r from-rose-400 to-pink-500 h-full rounded-full transition-all duration-500" :style="{ width: progressPercentage + '%' }"></div>
+                </div>
+            </div>
+        </header>
 
-                <select id="statusFilter" onchange="handleStatusFilter()" class="bg-gray-50 border border-gray-200 rounded-xl text-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-400">
-                    <option value="all">全部狀態</option>
-                    <option value="pending font-bold">⏳ 未完成</option>
-                    <option value="completed">✅ 已完成</option>
-                    <option value="starred">⭐ 優先/重要</option>
+        <!-- 工具列 / 控制區 -->
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-rose-100 mb-6 flex flex-wrap gap-3 justify-between items-center">
+            <!-- 搜尋與篩選 -->
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto flex-1">
+                <div class="relative flex-1 min-w-[200px]">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" v-model="searchQuery" placeholder="搜尋項目..." 
+                        class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-rose-400">
+                </div>
+                <select v-model="filterStatus" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:border-rose-400">
+                    <option value="all">全部項目</option>
+                    <option value="pending">待辦中</option>
+                    <option value="completed">已完成</option>
                 </select>
             </div>
 
-        </div>
-
-        <!-- Print Header Title (Only visible during print) -->
-        <div class="hidden print-only mb-6 text-center border-b pb-4">
-            <h1 class="text-2xl font-bold text-gray-900">我們的婚禮籌備 Checklist</h1>
-            <p class="text-gray-600 text-sm mt-1" id="printDateNotice"></p>
-        </div>
-
-        <!-- Checklist Accordion / Cards Container -->
-        <div id="checklistGroupContainer" class="space-y-6">
-            <!-- Dynamic Category Groups will be rendered here -->
-        </div>
-
-        <!-- Empty State -->
-        <div id="emptyState" class="hidden text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
-            <div class="w-16 h-16 bg-rose-50 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-3">
-                <i class="fa-solid fa-clipboard-list text-2xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-gray-700">找不到相關事項</h3>
-            <p class="text-gray-400 text-sm mt-1">試試變更搜尋關鍵字，或點擊下方按鈕新增自訂項目</p>
-            <button onclick="openAddTaskModal()" class="mt-4 bg-rose-500 hover:bg-rose-600 text-white font-medium text-sm px-4 py-2 rounded-xl inline-flex items-center gap-2">
-                <i class="fa-solid fa-plus"></i> 新增備忘事項
-            </button>
-        </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-100 py-6 text-center text-xs text-gray-400 no-print">
-        <div class="max-w-6xl mx-auto px-4">
-            <p>💖 祝你們備婚順利，擁有浪漫難忘的完美婚禮！</p>
-            <p class="mt-1">所有資料均儲存於您的本機瀏覽器，不會洩漏個人隱私。</p>
-        </div>
-    </footer>
-
-    <!-- MODAL: Add / Edit Task Modal -->
-    <div id="taskModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
-        <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200" id="taskModalCard">
-            <!-- Modal Header -->
-            <div class="bg-rose-50 px-6 py-4 border-b border-rose-100 flex justify-between items-center">
-                <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2" id="modalTitle">
-                    <i class="fa-solid fa-circle-plus text-rose-500"></i>
-                    <span>新增備忘事項</span>
-                </h3>
-                <button onclick="closeTaskModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
-                    <i class="fa-solid fa-xmark text-lg"></i>
+            <!-- 操作按鈕 -->
+            <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                <button @click="openAddModal()" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-plus"></i> 新增待辦項目
+                </button>
+                <button @click="exportData()" title="匯出 JSON 備份" class="p-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg text-sm transition">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+                <label title="匯入備份" class="p-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg text-sm transition cursor-pointer">
+                    <i class="fa-solid fa-upload"></i>
+                    <input type="file" accept=".json" @change="importData" class="hidden">
+                </label>
+                <button @click="confirmReset" title="恢復預設清單" class="p-2 border border-rose-200 text-rose-500 hover:bg-rose-50 rounded-lg text-sm transition">
+                    <i class="fa-solid fa-rotate-right"></i>
                 </button>
             </div>
-
-            <!-- Modal Form -->
-            <form id="taskForm" onsubmit="saveTask(event)" class="p-6 space-y-4">
-                <input type="hidden" id="taskId">
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">事項名稱 *</label>
-                    <input type="text" id="taskTitleInput" required placeholder="例如：確認婚宴試菜人數、試穿新郎西裝" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none">
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">籌備階段 / 分類</label>
-                        <select id="taskPhaseSelect" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none bg-white">
-                            <!-- Dynamic Options -->
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">重要程度</label>
-                        <select id="taskPrioritySelect" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none bg-white">
-                            <option value="normal">一般事項</option>
-                            <option value="important">⭐ 重要事項</option>
-                            <option value="urgent">🔥 緊急優先</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">詳細備註 / 聯絡資訊 / 備忘</label>
-                    <textarea id="taskNotesInput" rows="3" placeholder="例如：廠商電話、預約時間、需要攜帶的物品清單..." class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none"></textarea>
-                </div>
-
-                <!-- Buttons -->
-                <div class="flex justify-end space-x-3 pt-3 border-t border-gray-100">
-                    <button type="button" onclick="closeTaskModal()" class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50">
-                        取消
-                    </button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-medium shadow-md transition-all">
-                        儲存事項
-                    </button>
-                </div>
-            </form>
         </div>
-    </div>
 
-    <!-- MODAL: Settings & Backup Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
-        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl p-6 space-y-5">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-rose-500"></i> 設定與資料管理
-                </h3>
-                <button onclick="toggleSettingsModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <h4 class="text-sm font-bold text-gray-700 mb-1">備份與轉移資料</h4>
-                    <p class="text-xs text-gray-500 mb-3">您可以將目前的清單匯出為 JSON 檔，備份或匯入至其他裝置。</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="exportData()" class="w-full py-2 border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1">
-                            <i class="fa-solid fa-download"></i> 匯出清單 JSON
-                        </button>
-                        <label class="w-full py-2 border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1 cursor-pointer">
-                            <i class="fa-solid fa-upload"></i> 匯入 JSON
-                            <input type="file" id="importFileInput" accept=".json" onchange="importData(event)" class="hidden">
-                        </label>
+        <!-- 階段分組列表 -->
+        <div class="space-y-6">
+            <div v-for="category in categories" :key="category.id" class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <!-- 階段標題列 -->
+                <div @click="toggleCategory(category.id)" class="bg-slate-50/80 px-5 py-4 flex items-center justify-between cursor-pointer border-b border-slate-100 hover:bg-rose-50/30 transition">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm">
+                            <i :class="category.icon || 'fa-solid fa-calendar-check'"></i>
+                        </span>
+                        <div>
+                            <h2 class="font-bold text-slate-800 text-base md:text-lg">{{ category.title }}</h2>
+                            <p class="text-xs text-slate-400">{{ category.subtitle }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-500">
+                            {{ getCategoryStats(category.id) }}
+                        </span>
+                        <i class="fa-solid text-slate-400 transition-transform duration-200" 
+                           :class="collapsedCategories.includes(category.id) ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
                     </div>
                 </div>
 
-                <div class="border-t pt-4">
-                    <h4 class="text-sm font-bold text-rose-600 mb-1">重置清單</h4>
-                    <p class="text-xs text-gray-500 mb-3">將所有資料重置回預設狀態（會清除所有新增的自訂事項與勾選進度）。</p>
-                    <button onclick="confirmResetData()" class="w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold rounded-xl">
-                        ⚠️ 恢復為預設備婚清單
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Custom Notification Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 translate-y-20 opacity-0 transition-all duration-300 z-50 no-print">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-green-400"></i>
-        <span id="toastMessage" class="text-sm font-medium">通知訊息</span>
-    </div>
-
-    <!-- MODAL: Partner Sync Modal -->
-    <div id="syncModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
-        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl p-6 space-y-5">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-heart-circle-bolt text-rose-500"></i> 雙人即時同步與協作
-                </h3>
-                <button onclick="toggleSyncModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <div class="bg-rose-50 border border-rose-100 rounded-2xl p-4 text-xs text-rose-800 space-y-2">
-                    <div class="font-bold text-sm flex items-center gap-1.5">
-                        <i class="fa-solid fa-shield-heart text-rose-500"></i> 專屬於你們的備婚小天地
-                    </div>
-                    <p>分享此專屬號碼或連結給伴侶，雙方即可即時共同編輯、勾選與新增事項！</p>
-                </div>
-
-                <!-- Room Code & Share Section -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">您的專屬協作房間號碼</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="roomIdDisplay" readonly class="w-full font-mono text-center font-bold text-lg px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 tracking-wider">
-                        <button onclick="copyShareLink()" class="bg-rose-500 hover:bg-rose-600 text-white font-medium text-xs px-4 py-2 rounded-xl shadow-sm whitespace-nowrap flex items-center gap-1">
-                            <i class="fa-solid fa-copy"></i> 複製連結
-                        </button>
-                    </div>
-                </div>
-
-                <div class="border-t border-gray-100 pt-4">
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">加入伴侶已建立的房間</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="joinRoomInput" placeholder="請輸入伴侶的 6 位房間號碼" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none">
-                        <button onclick="joinPartnerRoom()" class="bg-gray-800 hover:bg-gray-900 text-white font-medium text-xs px-4 py-2 rounded-xl shadow-sm whitespace-nowrap">
-                            加入房間
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global state reference bridge
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'wedding-checklist-app';
-        let db = null;
-        let auth = null;
-        let unsubscribeRoom = null;
-
-        // Firebase Configuration Fallback
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "AIzaSyDemoConfigOnlyForLocalDev",
-                authDomain: "demo-app.firebaseapp.com",
-                projectId: "demo-app",
-                storageBucket: "demo-app.appspot.com",
-                messagingSenderId: "123456789",
-                appId: "1:123456789:web:demo"
-            };
-
-        // Initialize Cloud Sync Engine
-        async function initCloudSync() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Authenticate
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                setupRoomId();
-                subscribeToRoom();
-                updateSyncUI(true);
-            } catch (err) {
-                console.warn("Cloud sync unavailable, running in local mode:", err);
-                updateSyncUI(false);
-            }
-        }
-
-        // Room ID Resolution logic
-        function setupRoomId() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const queryRoom = urlParams.get('room');
-            let savedRoom = localStorage.getItem('wedding_room_id');
-
-            if (queryRoom) {
-                window.state.roomId = queryRoom.toUpperCase();
-                localStorage.setItem('wedding_room_id', window.state.roomId);
-            } else if (savedRoom) {
-                window.state.roomId = savedRoom;
-            } else {
-                // Generate friendly 6-char Room Code
-                window.state.roomId = 'LOVE' + Math.floor(100 + Math.random() * 900);
-                localStorage.setItem('wedding_room_id', window.state.roomId);
-            }
-
-            document.getElementById('roomIdDisplay').value = window.state.roomId;
-        }
-
-        // Subscribe to Firestore Document (STRICT PATH RULE 1)
-        function subscribeToRoom() {
-            if (!db || !auth || !auth.currentUser) return;
-            if (unsubscribeRoom) unsubscribeRoom();
-
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'wedding_rooms', window.state.roomId);
-
-            unsubscribeRoom = onSnapshot(roomRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    if (data && data.items) {
-                        window.state.items = data.items;
-                        if (data.weddingDate) window.state.weddingDate = data.weddingDate;
+                <!-- 階段項目列表 -->
+                <div v-show="!collapsedCategories.includes(category.id)" class="divide-y divide-slate-100">
+                    <div v-for="item in getCategoryItems(category.id)" :key="item.id" 
+                         class="p-4 hover:bg-slate-50/60 transition flex items-start justify-between gap-3 group"
+                         :class="{ 'bg-slate-50/30': item.completed }">
                         
-                        document.getElementById('weddingDateInput').value = window.state.weddingDate;
-                        window.saveLocalOnly();
-                        window.renderPhaseFilters();
-                        window.renderApp();
+                        <!-- Checkbox 與項目內文 -->
+                        <div class="flex items-start gap-3 flex-1 min-w-0">
+                            <input type="checkbox" :id="'item-' + item.id" v-model="item.completed" @change="saveData" 
+                                class="mt-1 w-5 h-5 text-rose-500 rounded border-slate-300 focus:ring-rose-400 cursor-pointer accent-rose-500">
+                            <div class="flex-1 min-w-0">
+                                <label :for="'item-' + item.id" 
+                                       class="font-medium text-slate-700 cursor-pointer text-sm md:text-base select-none block"
+                                       :class="{ 'line-through text-slate-400': item.completed }">
+                                    {{ item.title }}
+                                </label>
+                                <!-- 備註與細節 -->
+                                <p v-if="item.notes" class="text-xs text-slate-400 mt-1 flex items-start gap-1">
+                                    <i class="fa-regular fa-note-sticky mt-0.5"></i>
+                                    <span>{{ item.notes }}</span>
+                                </p>
+                                <!-- 預算與估價資訊 (選擇性) -->
+                                <div v-if="item.budget" class="text-xs text-rose-500 font-medium mt-1">
+                                    預算/費用: ${{ item.budget }}
+                                </div>
+                            </div>
+                        </div>
 
-                        if (data.lastUpdatedBy && data.lastUpdatedBy !== auth.currentUser.uid) {
-                            window.showToast('💕 伴侶更新了備婚清單內容！');
-                        }
-                    }
-                } else {
-                    // First time initialization in Cloud
-                    pushToCloud();
-                }
-            }, (error) => {
-                console.error("Sync listener error:", error);
-            });
-        }
+                        <!-- 編輯與刪除按鈕 -->
+                        <div class="flex items-center gap-1">
+                            <button @click.stop="openEditModal(item)" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 text-sm transition" title="編輯">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button @click.stop="confirmDeleteItem(item)" class="p-2 text-rose-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 text-sm transition" title="刪除">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
 
-        // Push latest local state to Firestore
-        async function pushToCloud() {
-            if (!db || !auth || !auth.currentUser) return;
-            try {
-                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'wedding_rooms', window.state.roomId);
-                await setDoc(roomRef, {
-                    weddingDate: window.state.weddingDate,
-                    items: window.state.items,
-                    updatedAt: new Date().toISOString(),
-                    lastUpdatedBy: auth.currentUser.uid
-                }, { merge: true });
-            } catch (e) {
-                console.error("Cloud push failed:", e);
-            }
-        }
+                    <!-- 該階段無資料顯示 -->
+                    <div v-if="getCategoryItems(category.id).length === 0" class="p-4 text-center text-xs text-slate-400 italic">
+                        此階段目前沒有相符的待辦事項。
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        function updateSyncUI(isOnline) {
-            const dot = document.getElementById('syncDot');
-            const statusText = document.getElementById('syncStatusText');
-            if (isOnline) {
-                dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm";
-                statusText.textContent = `協作中 (${window.state.roomId})`;
-            } else {
-                dot.className = "w-2.5 h-2.5 rounded-full bg-gray-300";
-                statusText.textContent = "單機模式";
-            }
-        }
+        <!-- 編輯 / 新增 Modal -->
+        <div v-if="showModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative">
+                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid" :class="isEditing ? 'fa-pen-to-square text-rose-500' : 'fa-plus-circle text-rose-500'"></i>
+                    {{ isEditing ? '編輯待辦項目' : '新增待辦項目' }}
+                </h3>
+                
+                <form @submit.prevent="saveModalItem" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">所屬階段</label>
+                        <select v-model="formItem.categoryId" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-rose-400 bg-white">
+                            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.title }}</option>
+                        </select>
+                    </div>
 
-        // Expose functions globally for app main logic
-        window.pushToCloud = pushToCloud;
-        window.switchRoom = function(newRoomId) {
-            window.state.roomId = newRoomId.toUpperCase();
-            localStorage.setItem('wedding_room_id', window.state.roomId);
-            document.getElementById('roomIdDisplay').value = window.state.roomId;
-            
-            // Update URL without reload
-            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?room=' + window.state.roomId;
-            window.history.pushState({ path: newUrl }, '', newUrl);
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">項目名稱 *</label>
+                        <input type="text" v-model="formItem.title" required placeholder="例如：預約新娘秘書" 
+                            class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-rose-400">
+                    </div>
 
-            subscribeToRoom();
-            window.showToast(`已切換至房間：${window.state.roomId}`);
-        };
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">預算 / 費用 (選填)</label>
+                        <input type="text" v-model="formItem.budget" placeholder="例如：30,000" 
+                            class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-rose-400">
+                    </div>
 
-        window.addEventListener('DOMContentLoaded', initCloudSync);
-    </script>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">備註 / 聯絡資訊 (選填)</label>
+                        <textarea v-model="formItem.notes" rows="3" placeholder="例如：已比較兩家，偏好風格A..." 
+                            class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-rose-400 resize-none"></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" @click="closeModal" class="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition">取消</button>
+                        <button type="submit" class="px-4 py-2 bg-rose-500 text-white rounded-lg text-sm font-medium hover:bg-rose-600 transition shadow-sm">儲存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 自訂刪除確認彈窗 (客製化 Modal) -->
+        <div v-if="itemToDelete" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl text-center space-y-4">
+                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-500 mx-auto flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">確認刪除項目？</h3>
+                    <p class="text-xs text-slate-500 mt-1 max-w-[240px] mx-auto truncate font-medium">「{{ itemToDelete.title }}」</p>
+                </div>
+                <div class="flex justify-center gap-2 pt-2">
+                    <button @click="itemToDelete = null" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">取消</button>
+                    <button @click="executeDelete" class="px-4 py-2 bg-rose-500 text-white rounded-lg text-xs font-semibold hover:bg-rose-600 transition shadow-sm">確定刪除</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 自訂重置確認彈窗 -->
+        <div v-if="showResetModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl text-center space-y-4">
+                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-500 mx-auto flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">重置為預設清單？</h3>
+                    <p class="text-xs text-slate-500 mt-1">這將會清空目前房間的資料，並恢復為初始範本。</p>
+                </div>
+                <div class="flex justify-center gap-2 pt-2">
+                    <button @click="showResetModal = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">取消</button>
+                    <button @click="executeReset" class="px-4 py-2 bg-rose-500 text-white rounded-lg text-xs font-semibold hover:bg-rose-600 transition shadow-sm">確定重置</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast 訊息提示面板 -->
+        <div v-if="toastMessage" class="fixed bottom-5 right-5 bg-slate-800 text-white px-4 py-2.5 rounded-xl shadow-lg text-sm flex items-center gap-2 z-50">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span>{{ toastMessage }}</span>
+        </div>
+
+    </div>
 
     <script>
-        // Default Master Wedding Checklist Data
-        const DEFAULT_PHASES = [
-            { id: 'phase1', name: '倒數 12 個月以上', icon: 'fa-calendar-days', badge: '準備開端' },
-            { id: 'phase2', name: '倒數 9 - 12 個月', icon: 'fa-camera', badge: '婚紗與主題' },
-            { id: 'phase3', name: '倒數 6 - 8 個月', icon: 'fa-gift', badge: '喜餅與禮服' },
-            { id: 'phase4', name: '倒數 3 - 5 個月', icon: 'fa-envelope-open-text', badge: '喜帖與流程' },
-            { id: 'phase5', name: '倒數 1 - 2 個月', icon: 'fa-clipboard-check', badge: '細節確認' },
-            { id: 'phase6', name: '倒數 1 - 2 週', icon: 'fa-heart-circle-check', badge: '最後衝刺' },
-            { id: 'phase7', name: '大喜之日 (Wedding Day)', icon: 'fa-champagne-glasses', badge: '當天隨身' },
-            { id: 'custom', name: '隨手記 / 個人自訂', icon: 'fa-note-sticky', badge: '自訂項目' }
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        const DEFAULT_CATEGORIES = [
+            { id: 'cat_12', title: '婚前 12~9 個月：確定方向與大方向廠商', subtitle: '提親、定日期、婚宴場地與熱門廠商', icon: 'fa-solid fa-ring' },
+            { id: 'cat_8', title: '婚前 8~6 個月：婚紗與視覺風格設計', subtitle: '拍攝婚紗、訂做西裝、挑選新秘與攝影', icon: 'fa-solid fa-camera-retro' },
+            { id: 'cat_5', title: '婚前 5~3 個月：婚宴細節與喜餅採購', subtitle: '喜餅試吃、婚戒購買、伴郎伴娘邀請', icon: 'fa-solid fa-gift' },
+            { id: 'cat_2', title: '婚前 2~1 個月：喜帖發放與婚宴流程', subtitle: '發送喜帖、確定宴客桌數、排定婚宴rundown', icon: 'fa-solid fa-envelope-open-text' },
+            { id: 'cat_final', title: '婚前 1-2 週：最後確認與個人護理', subtitle: '確認最後人數、保養美容、點收物品備品', icon: 'fa-solid fa-user-check' },
+            { id: 'cat_day', title: '結婚當天：隨身攜帶與注意事項', subtitle: '紅包準備、戒子、婚宴當天流程確認', icon: 'fa-solid fa-champagne-glasses' }
         ];
 
         const DEFAULT_ITEMS = [
-            // Phase 1
-            { id: 'item_1', phaseId: 'phase1', title: '確定婚期與合八字 / 擇吉日', notes: '與雙方父母商討並確定婚禮日期與合適時辰', completed: false, priority: 'important' },
-            { id: 'item_2', phaseId: 'phase1', title: '商討婚禮預算與費用分擔方式', notes: '列出總預算，包含婚宴、婚攝、婚紗、喜餅、蜜月等', completed: false, priority: 'important' },
-            { id: 'item_3', phaseId: 'phase1', title: '擬定初步賓客名單與桌數預估', notes: '估算男方與女方賓客大致人數', completed: false, priority: 'normal' },
-            { id: 'item_4', phaseId: 'phase1', title: '訂定婚宴場地 (飯店 / 戶外 / 婚宴會館)', notes: '確認菜色、最低桌數限制、場地設備與新娘休息室', completed: false, priority: 'urgent' },
-            { id: 'item_5', phaseId: 'phase1', title: '預約熱門婚禮攝影師 (婚攝) & 婚禮錄影 (婚錄)', notes: '搶訂熱門攝影師檔期，確認拍攝風格', completed: false, priority: 'urgent' },
-            { id: 'item_6', phaseId: 'phase1', title: '預約熱門新娘秘書 (新秘 / 造型師)', notes: '預約試妝，確認當天造型數與媽媽妝、伴娘妝費用', completed: false, priority: 'urgent' },
+            { id: 1, categoryId: 'cat_12', title: '雙方父母見面提親，確定婚期與型態（純宴客/合辦/分辦）', completed: false, notes: '確認是否需要擇日館算日子', budget: '' },
+            { id: 2, categoryId: 'cat_12', title: '預估結婚總預算與雙方分擔方式', completed: false, notes: '', budget: '' },
+            { id: 3, categoryId: 'cat_12', title: '預訂婚宴場地 (飯店/婚宴會館/戶外婚禮)', completed: false, notes: '需注意低消、起桌價、是否包含主持人與佈置', budget: '' },
+            { id: 4, categoryId: 'cat_12', title: '搶訂熱門新娘秘書 (新祕)', completed: false, notes: '試妝、簽約確認試妝費用折抵', budget: '' },
+            { id: 5, categoryId: 'cat_12', title: '搶訂熱門婚禮攝影 / 婚禮錄影 (婚攝/婚錄)', completed: false, notes: '確定服務時數、開車車馬費計算', budget: '' },
 
-            // Phase 2
-            { id: 'item_7', phaseId: 'phase2', title: '選擇婚紗攝影公司 / 婚紗工作室', notes: '挑選攝影風格、拍攝禮服套數與包套方案內容', completed: false, priority: 'important' },
-            { id: 'item_8', phaseId: 'phase2', title: '拍攝婚紗照與選片', notes: '準備外拍道具、保濕面膜，確認拍攝行程', completed: false, priority: 'normal' },
-            { id: 'item_9', phaseId: 'phase2', title: '確定婚禮風格與主題色調', notes: '決定佈置風格（戶外美式、韓系簡約、中式復古等）', completed: false, priority: 'normal' },
-            { id: 'item_10', phaseId: 'phase2', title: '尋找伴郎、伴娘、花童與工作人員名單', notes: '徵詢好友意願並確認當天人數', completed: false, priority: 'normal' },
+            { id: 6, categoryId: 'cat_8', title: '挑選與拍攝婚紗照 (婚紗工作室/包套)', completed: false, notes: '確認拍照禮服套數、外拍道具、修圖張數', budget: '' },
+            { id: 7, categoryId: 'cat_8', title: '新郎訂製/租借西裝', completed: false, notes: '包含襯衫、領帶、皮鞋準備', budget: '' },
+            { id: 8, categoryId: 'cat_8', title: '預訂婚禮主持人 / 婚禮企劃', completed: false, notes: '', budget: '' },
+            { id: 9, categoryId: 'cat_8', title: '擬定初步賓客名單與估計桌數', completed: false, notes: '', budget: '' },
 
-            // Phase 3
-            { id: 'item_11', phaseId: 'phase3', title: '預約試吃並訂購喜餅 / 婚禮西點', notes: '確認發放盒數、早鳥優惠與送達時間點', completed: false, priority: 'important' },
-            { id: 'item_12', phaseId: 'phase3', title: '選定訂婚與結婚當天禮服 (新娘晚禮服/新郎西裝)', notes: '預約禮服試穿，量身修改', completed: false, priority: 'important' },
-            { id: 'item_13', phaseId: 'phase3', title: '挑選與訂購結婚對戒 (婚戒)', notes: '需預留刻字與訂製時間約 1~2 個月', completed: false, priority: 'important' },
-            { id: 'item_14', phaseId: 'phase3', title: '規劃蜜月旅行地點與預訂機票飯店', notes: '確認護照效期、辦理簽證與安排婚假時間', completed: false, priority: 'normal' },
+            { id: 10, categoryId: 'cat_5', title: '試吃並確定喜餅門市與款式', completed: false, notes: '確認發送數量、盒數優惠與配送日期', budget: '' },
+            { id: 11, categoryId: 'cat_5', title: '挑選與購買結婚對戒', completed: false, notes: '需注意刻字服務所需時間 (約需1-2個月)', budget: '' },
+            { id: 12, categoryId: 'cat_5', title: '邀請伴郎、伴娘、花童與工作人員', completed: false, notes: '', budget: '' },
+            { id: 13, categoryId: 'cat_5', title: '預訂蜜旅行程與規劃假別', completed: false, notes: '確認護照效期 (需6個月以上)', budget: '' },
 
-            // Phase 4
-            { id: 'item_15', phaseId: 'phase4', title: '發放線上電子喜帖 / 出席意願調查表', notes: '收集賓客地址、出席人數與飲食需求(葷/素)', completed: false, priority: 'important' },
-            { id: 'item_16', phaseId: 'phase4', title: '設計與印製實體紙本喜帖', notes: '確認喜帖內文格式、信封地址列印', completed: false, priority: 'normal' },
-            { id: 'item_17', phaseId: 'phase4', title: '挑選婚禮小物 (二進禮/桌上禮/送客禮)', notes: '根據預算採購賓客小禮物', completed: false, priority: 'normal' },
-            { id: 'item_18', phaseId: 'phase4', title: '討論婚禮流程與遊戲節目', notes: '與婚禮主持企劃開會，規劃進場方式與互動遊戲', completed: false, priority: 'normal' },
-            { id: 'item_19', phaseId: 'phase4', title: '製作婚禮影片 (開場MV / 成長MV / 感恩MV)', notes: '整理從小到大的照片與兩人交往照片', completed: false, priority: 'normal' },
+            { id: 14, categoryId: 'cat_2', title: '印製並發送喜帖 (紙本/電子喜帖)', completed: false, notes: '利用 Google 表單收集賓客出席意願與地址', budget: '' },
+            { id: 15, categoryId: 'cat_2', title: '挑選宴客當天禮服 (白紗、晚禮服)', completed: false, notes: '安排試穿與修改尺寸日期', budget: '' },
+            { id: 16, categoryId: 'cat_2', title: '與主持人/婚企討論婚宴流程與音樂檔', completed: false, notes: '準備進場影片、成長影片', budget: '' },
+            { id: 17, categoryId: 'cat_2', title: '購買婚宴小禮物 (進場禮/二次進場/位上禮/遊戲禮)', completed: false, notes: '', budget: '' },
 
-            // Phase 5
-            { id: 'item_20', phaseId: 'phase5', title: '寄出正式實體喜帖', notes: '婚禮前約 1.5 ~ 2 個月寄出', completed: false, priority: 'important' },
-            { id: 'item_21', phaseId: 'phase5', title: '統計最終出席人數與桌數安排', notes: '確認葷食/素食桌數，規劃賓客桌位圖 (Seating Chart)', completed: false, priority: 'urgent' },
-            { id: 'item_22', phaseId: 'phase5', title: '與新秘溝通婚禮當天造型與試妝最終確認', notes: '準備喜歡與不喜歡的造型圖片供新秘參考', completed: false, priority: 'important' },
-            { id: 'item_23', phaseId: 'phase5', title: '與婚攝、婚錄、主持人開會確認當天 rundown', notes: '提供詳細時間流程表與重點拍攝對象清單', completed: false, priority: 'important' },
-            { id: 'item_24', phaseId: 'phase5', title: '準備婚禮音樂播放清單', notes: '包含迎賓、進場、用餐、二進、送客等曲目', completed: false, priority: 'normal' },
+            { id: 18, categoryId: 'cat_final', title: '確認最後出席人數與排定宴客桌位圖', completed: false, notes: '提供給飯店與報到處工作人員', budget: '' },
+            { id: 19, categoryId: 'cat_final', title: '準備紅包禮金 (工作人員、新祕、婚攝、伴郎伴娘)', completed: false, notes: '換新鈔並包好寫上記號', budget: '' },
+            { id: 20, categoryId: 'cat_final', title: '新郎修剪頭髮、新娘做美甲與皮膚保養', completed: false, notes: '', budget: '' },
+            { id: 21, categoryId: 'cat_final', title: '尾款結清與各廠商最終確認 (時間地點細節)', completed: false, notes: '', budget: '' },
 
-            // Phase 6
-            { id: 'item_25', phaseId: 'phase6', title: '確認婚宴場地設備與試播影片', notes: '至飯店現場測試影片格式、音樂音效與燈光', completed: false, priority: 'urgent' },
-            { id: 'item_26', phaseId: 'phase6', title: '準備現金紅包與廠商尾款', notes: '準備給工作人員、司機、伴郎伴娘的紅包', completed: false, priority: 'urgent' },
-            { id: 'item_27', phaseId: 'phase6', title: '最終試穿婚紗與禮服尺寸', notes: '確認胸圍腰圍合身度，拿取修改好的禮服', completed: false, priority: 'urgent' },
-            { id: 'item_28', phaseId: 'phase6', title: '個人美容保養 (染髮、修眉、美甲等)', notes: '避免婚禮前夕嘗試沒做過的醫美項目', completed: false, priority: 'normal' },
-
-            // Phase 7
-            { id: 'item_29', phaseId: 'phase7', title: '婚禮當天急救包 (隨身小包)', notes: '雙面膠、針線包, 隱形眼鏡, 補妝用具, 平底鞋, 止痛藥', completed: false, priority: 'urgent' },
-            { id: 'item_30', phaseId: 'phase7', title: '攜帶結婚對戒與誓詞本', notes: '交由伴郎/伴娘妥善保管', completed: false, priority: 'urgent' },
-            { id: 'item_31', phaseId: 'phase7', title: '攜帶所有工作紅包與尾款尾數袋', notes: '交由信任的總籌或親人負責發放', completed: false, priority: 'urgent' }
+            { id: 22, categoryId: 'cat_day', title: '攜帶結婚戒指、誓詞本、婚紗照相本/謝卡', completed: false, notes: '交給專人保管', budget: '' },
+            { id: 23, categoryId: 'cat_day', title: '攜帶尾款紅包與工作人員紅包', completed: false, notes: '交給總籌發放', budget: '' },
+            { id: 24, categoryId: 'cat_day', title: '準備新人新娘緊急救急包 (隱形眼鏡、安全針、止痛藥、安瓶)', completed: false, notes: '', budget: '' }
         ];
 
-        // State Store
-        let state = {
-            weddingDate: '',
-            roomId: '',
-            currentPhaseFilter: 'all',
-            currentStatusFilter: 'all',
-            searchQuery: '',
-            items: []
-        };
-
-        // Initialize App
-        window.onload = function() {
-            loadState();
-            setupPhaseOptions();
-            renderPhaseFilters();
-            renderApp();
-        };
-
-        // Load data from LocalStorage
-        function loadState() {
-            const savedDate = localStorage.getItem('wedding_date');
-            const savedItems = localStorage.getItem('wedding_items');
-
-            if (savedDate) {
-                state.weddingDate = savedDate;
-            } else {
-                const futureDate = new Date();
-                futureDate.setMonth(futureDate.getMonth() + 6);
-                state.weddingDate = futureDate.toISOString().split('T')[0];
-            }
-
-            if (savedItems) {
-                try {
-                    state.items = JSON.parse(savedItems);
-                } catch(e) {
-                    state.items = [...DEFAULT_ITEMS];
-                }
-            } else {
-                state.items = [...DEFAULT_ITEMS];
-            }
-
-            document.getElementById('weddingDateInput').value = state.weddingDate;
-        }
-
-        // Save Local and Sync to Cloud
-        function saveLocalOnly() {
-            localStorage.setItem('wedding_date', state.weddingDate);
-            localStorage.setItem('wedding_items', JSON.stringify(state.items));
-        }
-
-        function saveState() {
-            saveLocalOnly();
-            if (typeof window.pushToCloud === 'function') {
-                window.pushToCloud();
-            }
-        }
-
-        // Toggle Sync Modal
-        function toggleSyncModal() {
-            const modal = document.getElementById('syncModal');
-            modal.classList.toggle('hidden');
-        }
-
-        // Copy Shareable URL
-        function copyShareLink() {
-            const shareUrl = `${window.location.origin}${window.location.pathname}?room=${state.roomId}`;
-            
-            // Clipboard fallback for iFrames
-            const input = document.createElement('textarea');
-            input.value = shareUrl;
-            document.body.appendChild(input);
-            input.select();
-            document.execCommand('copy');
-            document.body.removeChild(input);
-
-            showToast('📋 已複製專屬連結！快發給伴侶吧');
-        }
-
-        // Join Partner's Room
-        function joinPartnerRoom() {
-            const input = document.getElementById('joinRoomInput');
-            const code = input.value.trim().toUpperCase();
-
-            if (!code || code.length < 4) {
-                showToast('請輸入有效的房間號碼');
-                return;
-            }
-
-            if (window.confirm(`確定要加入房間「${code}」嗎？系統將切換至該房間的備婚清單。`)) {
-                if (typeof window.switchRoom === 'function') {
-                    window.switchRoom(code);
-                    toggleSyncModal();
-                    input.value = '';
-                }
-            }
-        }
-
-        // Open Modal to Add New Task
-        function openAddTaskModal(defaultPhaseId = 'custom') {
-            document.getElementById('taskId').value = '';
-            document.getElementById('taskTitleInput').value = '';
-            document.getElementById('taskNotesInput').value = '';
-            document.getElementById('taskPrioritySelect').value = 'normal';
-            document.getElementById('taskPhaseSelect').value = state.currentPhaseFilter !== 'all' ? state.currentPhaseFilter : defaultPhaseId;
-            
-            document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-circle-plus text-rose-500"></i> 新增備忘事項`;
-            
-            const modal = document.getElementById('taskModal');
-            const card = document.getElementById('taskModalCard');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                card.classList.remove('scale-95', 'opacity-0');
-                card.classList.add('scale-100', 'opacity-100');
-                document.getElementById('taskTitleInput').focus();
-            }, 10);
-        }
-
-        // Open Modal to Edit Existing Task
-        function editTask(id) {
-            const item = state.items.find(i => i.id === id);
-            if (!item) return;
-
-            document.getElementById('taskId').value = item.id;
-            document.getElementById('taskTitleInput').value = item.title;
-            document.getElementById('taskPhaseSelect').value = item.phaseId;
-            document.getElementById('taskPrioritySelect').value = item.priority || 'normal';
-            document.getElementById('taskNotesInput').value = item.notes || '';
-
-            document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-rose-500"></i> 編輯備忘事項`;
-
-            const modal = document.getElementById('taskModal');
-            const card = document.getElementById('taskModalCard');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                card.classList.remove('scale-95', 'opacity-0');
-                card.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-
-        // Close Task Modal
-        function closeTaskModal() {
-            const modal = document.getElementById('taskModal');
-            const card = document.getElementById('taskModalCard');
-            card.classList.remove('scale-100', 'opacity-100');
-            card.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 200);
-        }
-
-        // Save Task Form Submission
-        function saveTask(e) {
-            e.preventDefault();
-            const id = document.getElementById('taskId').value;
-            const title = document.getElementById('taskTitleInput').value.trim();
-            const phaseId = document.getElementById('taskPhaseSelect').value;
-            const priority = document.getElementById('taskPrioritySelect').value;
-            const notes = document.getElementById('taskNotesInput').value.trim();
-
-            if (!title) return;
-
-            if (id) {
-                // Update Existing Item
-                const item = state.items.find(i => i.id === id);
-                if (item) {
-                    item.title = title;
-                    item.phaseId = phaseId;
-                    item.priority = priority;
-                    item.notes = notes;
-                    showToast('已成功更新備忘事項');
-                }
-            } else {
-                // Add New Custom Item
-                const newItem = {
-                    id: 'custom_' + Date.now(),
-                    phaseId: phaseId,
-                    title: title,
-                    notes: notes,
-                    completed: false,
-                    priority: priority
-                };
-                state.items.unshift(newItem);
-                showToast('新事項已放入備婚清單中！');
-            }
-
-            saveState();
-            renderPhaseFilters();
-            renderApp();
-            closeTaskModal();
-        }
-
-        // Delete Task
-        function deleteTask(id) {
-            const item = state.items.find(i => i.id === id);
-            if (!item) return;
-
-            // Custom UI prompt alternative without alert/confirm
-            if (window.confirm(`確定要刪除「${item.title}」嗎？`)) {
-                state.items = state.items.filter(i => i.id !== id);
-                saveState();
-                renderPhaseFilters();
-                renderApp();
-                showToast('已刪除該事項');
-            }
-        }
-
-        // Filter Updates
-        function setPhaseFilter(phaseId) {
-            state.currentPhaseFilter = phaseId;
-            renderPhaseFilters();
-            renderChecklists();
-        }
-
-        function handleStatusFilter() {
-            state.currentStatusFilter = document.getElementById('statusFilter').value;
-            renderChecklists();
-        }
-
-        function handleSearch() {
-            state.searchQuery = document.getElementById('searchInput').value;
-            renderChecklists();
-        }
-
-        function updateWeddingDate(dateString) {
-            state.weddingDate = dateString;
-            saveState();
-            renderCountdown();
-        }
-
-        // Settings Modal Toggle
-        function toggleSettingsModal() {
-            const modal = document.getElementById('settingsModal');
-            modal.classList.toggle('hidden');
-        }
-
-        // Export JSON Data
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `wedding_checklist_${new Date().toISOString().split('T')[0]}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            showToast('已匯出備份檔案');
-        }
-
-        // Import JSON Data
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (imported && Array.isArray(imported.items)) {
-                        state.items = imported.items;
-                        if (imported.weddingDate) state.weddingDate = imported.weddingDate;
-                        saveState();
-                        renderPhaseFilters();
-                        renderApp();
-                        toggleSettingsModal();
-                        showToast('成功匯入備忘清單！');
-                    } else {
-                        showToast('匯入失敗：檔案格式不正確');
-                    }
-                } catch(err) {
-                    showToast('匯入失敗：JSON 格式錯誤');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // Confirm Reset
-        function confirmResetData() {
-            if (window.confirm('確定要清除自訂事項並將備婚清單恢復至預設狀態嗎？此動作無法撤銷。')) {
-                state.items = [...DEFAULT_ITEMS];
-                saveState();
-                renderPhaseFilters();
-                renderApp();
-                toggleSettingsModal();
-                showToast('已恢復為預設清單');
-            }
-        }
-
-        // Toast Notification Helper
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            const messageEl = document.getElementById('toastMessage');
-            messageEl.textContent = msg;
-
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 2500);
-        }
-
-        function setupPhaseOptions() {
-            const select = document.getElementById('taskPhaseSelect');
-            if (!select) return;
-            select.innerHTML = DEFAULT_PHASES.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-        }
-
-        function renderPhaseFilters() {
-            const container = document.getElementById('phaseFilterContainer');
-            if (!container) return;
-
-            let html = `
-                <button onclick="setPhaseFilter('all')" class="px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all ${state.currentPhaseFilter === 'all' ? 'bg-rose-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
-                    全部階段 (${state.items.length})
-                </button>
-            `;
-
-            DEFAULT_PHASES.forEach(phase => {
-                const count = state.items.filter(i => i.phaseId === phase.id).length;
-                const isActive = state.currentPhaseFilter === phase.id;
-                html += `
-                    <button onclick="setPhaseFilter('${phase.id}')" class="px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${isActive ? 'bg-rose-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
-                        <i class="fa-solid ${phase.icon} text-xs"></i>
-                        <span>${phase.name}</span>
-                        <span class="text-xs px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/30 text-white' : 'bg-gray-200 text-gray-600'}">${count}</span>
-                    </button>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
-
-        function renderCountdown() {
-            const titleEl = document.getElementById('countdownTitle');
-            const dateInput = document.getElementById('weddingDateInput');
-            if (dateInput) dateInput.value = state.weddingDate;
-
-            if (!state.weddingDate) {
-                if (titleEl) titleEl.textContent = '請選擇婚禮日期';
-                return;
-            }
-
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const target = new Date(state.weddingDate);
-            target.setHours(0, 0, 0, 0);
-
-            const diffTime = target - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (titleEl) {
-                if (diffDays > 0) {
-                    titleEl.innerHTML = `距離大喜之日還有 <span class="underline decoration-yellow-300 decoration-wavy underline-offset-4">${diffDays}</span> 天`;
-                } else if (diffDays === 0) {
-                    titleEl.textContent = '🎉 祝你們新婚快樂！今天就是大喜之日！ 💕';
-                } else {
-                    titleEl.textContent = `幸福滿滿！已經結婚 ${Math.abs(diffDays)} 天囉 💕`;
-                }
-            }
-
-            const printNotice = document.getElementById('printDateNotice');
-            if (printNotice) {
-                printNotice.textContent = `婚期：${state.weddingDate} (${diffDays >= 0 ? '倒數 ' + diffDays + ' 天' : '已完成'})`;
-            }
-        }
-
-        function renderChecklists() {
-            // Update Overall Stats
-            const total = state.items.length;
-            const completed = state.items.filter(i => i.completed).length;
-            const pending = total - completed;
-            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-            const percentEl = document.getElementById('progressPercentage');
-            const barEl = document.getElementById('progressBar');
-            const completedEl = document.getElementById('completedCount');
-            const pendingEl = document.getElementById('pendingCount');
-
-            if (percentEl) percentEl.textContent = `${percent}%`;
-            if (barEl) barEl.style.width = `${percent}%`;
-            if (completedEl) completedEl.textContent = completed;
-            if (pendingEl) pendingEl.textContent = pending;
-
-            // Filtering items
-            let filtered = [...state.items];
-
-            if (state.currentPhaseFilter !== 'all') {
-                filtered = filtered.filter(i => i.phaseId === state.currentPhaseFilter);
-            }
-
-            if (state.currentStatusFilter === 'pending') {
-                filtered = filtered.filter(i => !i.completed);
-            } else if (state.currentStatusFilter === 'completed') {
-                filtered = filtered.filter(i => i.completed);
-            } else if (state.currentStatusFilter === 'starred') {
-                filtered = filtered.filter(i => i.priority === 'important' || i.priority === 'urgent');
-            }
-
-            if (state.searchQuery) {
-                const q = state.searchQuery.toLowerCase();
-                filtered = filtered.filter(i => i.title.toLowerCase().includes(q) || (i.notes && i.notes.toLowerCase().includes(q)));
-            }
-
-            const groupContainer = document.getElementById('checklistGroupContainer');
-            const emptyState = document.getElementById('emptyState');
-
-            if (filtered.length === 0) {
-                if (groupContainer) groupContainer.innerHTML = '';
-                if (emptyState) emptyState.classList.remove('hidden');
-                return;
-            }
-
-            if (emptyState) emptyState.classList.add('hidden');
-
-            // Group filtered items by phase
-            let html = '';
-            const activePhases = state.currentPhaseFilter === 'all' 
-                ? DEFAULT_PHASES 
-                : DEFAULT_PHASES.filter(p => p.id === state.currentPhaseFilter);
-
-            activePhases.forEach(phase => {
-                const phaseItems = filtered.filter(i => i.phaseId === phase.id);
-                if (phaseItems.length === 0) return;
-
-                const phaseTotal = state.items.filter(i => i.phaseId === phase.id).length;
-                const phaseDone = state.items.filter(i => i.phaseId === phase.id && i.completed).length;
-
-                html += `
-                    <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 card-print">
-                        <!-- Group Header -->
-                        <div class="flex flex-wrap justify-between items-center pb-4 mb-4 border-b border-gray-100 gap-2">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center font-bold text-base shadow-sm">
-                                    <i class="fa-solid ${phase.icon}"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-base sm:text-lg font-bold text-gray-800 flex items-center gap-2">
-                                        <span>${escapeHtml(phase.name)}</span>
-                                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-600">${phase.badge}</span>
-                                    </h3>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                                    進度 ${phaseDone} / ${phaseTotal}
-                                </span>
-                                <button onclick="openAddTaskModal('${phase.id}')" class="no-print text-xs font-semibold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1 rounded-full transition-all flex items-center gap-1">
-                                    <i class="fa-solid fa-plus"></i> 新增
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Group Item List -->
-                        <div class="space-y-3">
-                `;
-
-                phaseItems.forEach(item => {
-                    let badgeClass = '';
-                    let badgeText = '';
-
-                    if (item.priority === 'urgent') {
-                        badgeClass = 'bg-red-100 text-red-600 border-red-200';
-                        badgeText = '🔥 緊急';
-                    } else if (item.priority === 'important') {
-                        badgeClass = 'bg-amber-100 text-amber-700 border-amber-200';
-                        badgeText = '⭐ 重要';
-                    }
-
-                    html += `
-                        <div class="group flex items-start justify-between p-3.5 rounded-2xl transition-all border ${item.completed ? 'bg-gray-50/70 border-gray-100 opacity-75' : 'bg-white border-gray-100 hover:border-rose-200 hover:shadow-sm'}">
-                            <div class="flex items-start space-x-3.5 flex-grow pr-2">
-                                <label class="relative flex items-center justify-center mt-0.5 cursor-pointer">
-                                    <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleItemComplete('${item.id}')" class="checkbox-custom sr-only">
-                                    <div class="w-5 h-5 rounded-lg border-2 ${item.completed ? 'bg-rose-500 border-rose-500 text-white' : 'border-gray-300 group-hover:border-rose-400'} flex items-center justify-center transition-all">
-                                        ${item.completed ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
-                                    </div>
-                                </label>
-                                <div class="space-y-1 flex-grow">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="text-sm font-semibold ${item.completed ? 'line-through text-gray-400' : 'text-gray-800'}">
-                                            ${escapeHtml(item.title)}
-                                        </span>
-                                        ${badgeText ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeClass}">${badgeText}</span>` : ''}
-                                    </div>
-                                    ${item.notes ? `<p class="text-xs ${item.completed ? 'text-gray-400' : 'text-gray-500'} bg-gray-50 p-2 rounded-xl border border-gray-100 mt-1">${escapeHtml(item.notes)}</p>` : ''}
-                                </div>
-                            </div>
-
-                            <div class="no-print flex items-center space-x-1 opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick="editTask('${item.id}')" class="text-gray-400 hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-50 text-xs transition-colors" title="編輯">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-                                <button onclick="deleteTask('${item.id}')" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 text-xs transition-colors" title="刪除">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
+        createApp({
+            setup() {
+                const categories = ref(DEFAULT_CATEGORIES);
+                const items = ref([]);
+                const collapsedCategories = ref([]);
+                const searchQuery = ref('');
+                const filterStatus = ref('all');
+                
+                // 房間與同步狀態
+                const roomId = ref('');
+                const user = ref(null);
+                const isSyncing = ref(false);
+                const toastMessage = ref('');
+                
+                let db = null;
+                let auth = null;
+                let unsubscribeDoc = null;
+
+                // Modal 狀態
+                const showModal = ref(false);
+                const isEditing = ref(false);
+                const itemToDelete = ref(null);
+                const showResetModal = ref(false);
+
+                const formItem = ref({
+                    id: null,
+                    categoryId: 'cat_12',
+                    title: '',
+                    budget: '',
+                    notes: '',
+                    completed: false
                 });
 
-                html += `
-                        </div>
-                    </div>
-                `;
-            });
+                // 顯示浮動提示
+                const showToast = (msg) => {
+                    toastMessage.value = msg;
+                    setTimeout(() => {
+                        toastMessage.value = '';
+                    }, 3000);
+                };
 
-            if (groupContainer) groupContainer.innerHTML = html;
-        }
+                const getInitialRoomId = () => {
+                    const params = new URLSearchParams(window.location.search);
+                    const roomParam = params.get('room');
+                    if (roomParam) return roomParam;
 
-        function renderApp() {
-            renderCountdown();
-            renderChecklists();
-        }
+                    const savedRoom = localStorage.getItem('wedding_checklist_room_id');
+                    if (savedRoom) return savedRoom;
 
-        function toggleItemComplete(id) {
-            const item = state.items.find(i => i.id === id);
-            if (item) {
-                item.completed = !item.completed;
-                saveState();
-                renderPhaseFilters();
-                renderApp();
+                    const newRoom = 'our-wedding-' + Math.floor(1000 + Math.random() * 9000);
+                    localStorage.setItem('wedding_checklist_room_id', newRoom);
+                    return newRoom;
+                };
+
+                onMounted(async () => {
+                    roomId.value = getInitialRoomId();
+
+                    if (window.FirebaseModule && typeof __firebase_config !== 'undefined') {
+                        const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.FirebaseModule;
+                        const firebaseConfig = JSON.parse(__firebase_config);
+                        const app = initializeApp(firebaseConfig);
+                        auth = getAuth(app);
+                        db = getFirestore(app);
+
+                        try {
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                await signInWithCustomToken(auth, __initial_auth_token);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (e) {
+                            console.error('Firebase Auth Error:', e);
+                        }
+
+                        onAuthStateChanged(auth, (u) => {
+                            user.value = u;
+                            if (u) {
+                                listenToRoomData();
+                            }
+                        });
+                    } else {
+                        const savedItems = localStorage.getItem('wedding_checklist_items');
+                        items.value = savedItems ? JSON.parse(savedItems) : DEFAULT_ITEMS;
+                    }
+                });
+
+                const listenToRoomData = () => {
+                    if (!user.value || !db) return;
+                    if (unsubscribeDoc) unsubscribeDoc();
+
+                    const { doc, onSnapshot } = window.FirebaseModule;
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'wedding_rooms', roomId.value);
+
+                    isSyncing.value = true;
+
+                    unsubscribeDoc = onSnapshot(docRef, (docSnap) => {
+                        isSyncing.value = false;
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            if (data && Array.isArray(data.items)) {
+                                items.value = data.items;
+                            }
+                        } else {
+                            saveDataToCloud(DEFAULT_ITEMS);
+                        }
+                    }, (err) => {
+                        console.error('Firestore snapshot error:', err);
+                        isSyncing.value = false;
+                    });
+                };
+
+                const saveData = () => {
+                    localStorage.setItem('wedding_checklist_items', JSON.stringify(items.value));
+                    if (user.value && db) {
+                        saveDataToCloud(items.value);
+                    }
+                };
+
+                const saveDataToCloud = async (itemsData) => {
+                    if (!user.value || !db) return;
+                    try {
+                        const { doc, setDoc } = window.FirebaseModule;
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'wedding_rooms', roomId.value);
+                        
+                        isSyncing.value = true;
+                        await setDoc(docRef, {
+                            items: itemsData,
+                            updatedAt: new Date().toISOString()
+                        }, { merge: true });
+                        setTimeout(() => { isSyncing.value = false; }, 300);
+                    } catch (e) {
+                        console.error('Cloud Save Error:', e);
+                        isSyncing.value = false;
+                    }
+                };
+
+                const copyShareLink = () => {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('room', roomId.value);
+                    
+                    const el = document.createElement('textarea');
+                    el.value = url.toString();
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+
+                    showToast('已複製分享連結！傳給伴侶打開即可一同備婚');
+                };
+
+                const promptChangeRoom = () => {
+                    const inputRoom = prompt('請輸入要加入或切換的「房間代碼」:', roomId.value);
+                    if (inputRoom && inputRoom.trim() !== '' && inputRoom !== roomId.value) {
+                        roomId.value = inputRoom.trim();
+                        localStorage.setItem('wedding_checklist_room_id', roomId.value);
+                        
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('room', roomId.value);
+                        window.history.pushState({}, '', url);
+
+                        listenToRoomData();
+                        showToast(`已成功切換至房間：${roomId.value}`);
+                    }
+                };
+
+                const totalCount = computed(() => items.value.length);
+                const completedCount = computed(() => items.value.filter(i => i.completed).length);
+                const progressPercentage = computed(() => {
+                    if (totalCount.value === 0) return 0;
+                    return Math.round((completedCount.value / totalCount.value) * 100);
+                });
+
+                const getCategoryItems = (categoryId) => {
+                    return items.value.filter(item => {
+                        const matchesCategory = item.categoryId === categoryId;
+                        const matchesSearch = item.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                                              (item.notes && item.notes.toLowerCase().includes(searchQuery.value.toLowerCase()));
+                        
+                        let matchesStatus = true;
+                        if (filterStatus.value === 'pending') matchesStatus = !item.completed;
+                        if (filterStatus.value === 'completed') matchesStatus = item.completed;
+
+                        return matchesCategory && matchesSearch && matchesStatus;
+                    });
+                };
+
+                const getCategoryStats = (categoryId) => {
+                    const categoryAll = items.value.filter(i => i.categoryId === categoryId);
+                    const categoryDone = categoryAll.filter(i => i.completed);
+                    return `${categoryDone.length}/${categoryAll.length}`;
+                };
+
+                const toggleCategory = (categoryId) => {
+                    const index = collapsedCategories.value.indexOf(categoryId);
+                    if (index > -1) {
+                        collapsedCategories.value.splice(index, 1);
+                    } else {
+                        collapsedCategories.value.push(categoryId);
+                    }
+                };
+
+                const openAddModal = (categoryId = 'cat_12') => {
+                    isEditing.value = false;
+                    formItem.value = {
+                        id: Date.now(),
+                        categoryId: categoryId,
+                        title: '',
+                        budget: '',
+                        notes: '',
+                        completed: false
+                    };
+                    showModal.value = true;
+                };
+
+                const openEditModal = (item) => {
+                    isEditing.value = true;
+                    formItem.value = JSON.parse(JSON.stringify(item));
+                    showModal.value = true;
+                };
+
+                const closeModal = () => {
+                    showModal.value = false;
+                };
+
+                const saveModalItem = () => {
+                    if (!formItem.value.title.trim()) return;
+
+                    if (isEditing.value) {
+                        const index = items.value.findIndex(i => i.id === formItem.value.id);
+                        if (index !== -1) {
+                            items.value[index] = { ...formItem.value };
+                        }
+                    } else {
+                        items.value.push({ ...formItem.value });
+                    }
+                    saveData();
+                    closeModal();
+                    showToast(isEditing.value ? '已成功更新項目' : '已成功新增項目');
+                };
+
+                // 開啟刪除確認視窗
+                const confirmDeleteItem = (item) => {
+                    itemToDelete.value = item;
+                };
+
+                // 執行真正的刪除操作
+                const executeDelete = () => {
+                    if (itemToDelete.value) {
+                        items.value = items.value.filter(i => i.id !== itemToDelete.value.id);
+                        saveData();
+                        itemToDelete.value = null;
+                        showToast('已成功刪除項目');
+                    }
+                };
+
+                // 重置相關
+                const confirmReset = () => {
+                    showResetModal.value = true;
+                };
+
+                const executeReset = () => {
+                    items.value = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+                    saveData();
+                    showResetModal.value = false;
+                    showToast('清單已恢復為預設範本');
+                };
+
+                const exportData = () => {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items.value, null, 2));
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", `結婚準備清單_${roomId.value}_${new Date().toISOString().slice(0,10)}.json`);
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+                };
+
+                const importData = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const importedItems = JSON.parse(e.target.result);
+                            if (Array.isArray(importedItems)) {
+                                items.value = importedItems;
+                                saveData();
+                                showToast('成功匯入備份資料！');
+                            } else {
+                                alert('檔案格式不正確。');
+                            }
+                        } catch (err) {
+                            alert('解析檔案失敗，請確定檔案為標準的備份格式。');
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+
+                return {
+                    categories,
+                    items,
+                    collapsedCategories,
+                    searchQuery,
+                    filterStatus,
+                    showModal,
+                    isEditing,
+                    formItem,
+                    roomId,
+                    isSyncing,
+                    toastMessage,
+                    itemToDelete,
+                    showResetModal,
+                    totalCount,
+                    completedCount,
+                    progressPercentage,
+                    getCategoryItems,
+                    getCategoryStats,
+                    toggleCategory,
+                    openAddModal,
+                    openEditModal,
+                    closeModal,
+                    saveModalItem,
+                    confirmDeleteItem,
+                    executeDelete,
+                    confirmReset,
+                    executeReset,
+                    exportData,
+                    importData,
+                    saveData,
+                    copyShareLink,
+                    promptChangeRoom
+                };
             }
-        }
-
-        // HTML Escape Helper
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
+        }).mount('#app');
     </script>
 </body>
 </html>
